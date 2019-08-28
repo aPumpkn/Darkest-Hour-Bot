@@ -22,8 +22,8 @@ public class BotFile extends Listener {
 	
 	/* Constructor for this class. Assigns the field 'file'
 	 * as a directory to the file/folder. This 'file' is
-   * used to access the requested file by this class'
-   * methods.
+	 * used to access the requested file by this class'
+  	 * methods.
 	 * 
 	 * Parameters:
 	 * file - Represents the directory of the file/folder
