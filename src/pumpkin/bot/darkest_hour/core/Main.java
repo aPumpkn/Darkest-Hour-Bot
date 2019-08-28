@@ -1,7 +1,3 @@
-Completed the Main class.
-
-The place where the JDA is initialized. Also includes terminal interaction for the user. This is used to safely log out and close the program.
-
 package pumpkin.bot.darkest_hour.core;
 
 import java.util.Calendar;
