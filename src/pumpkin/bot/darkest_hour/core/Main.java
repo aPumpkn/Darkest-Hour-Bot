@@ -33,15 +33,14 @@ public class Main {
 			
 			String error = String.valueOf(e);
 			new BotFile("logs/error/" + Calendar.getInstance(Locale.US).getTime().toString().replace(":", "-") + ".err").create(error);
-			System.out.println("[Darkest Hour] Error encountered.\r\n\r\n");
+			System.out.println("[Darkest Dawn] Error encountered.\r\n\r\n");
 			System.err.println(error);
-			System.out.println("\r\n[Darkest Hour] Creating log file...\r\n\r\n");
+			System.out.println("\r\n[Darkest Dawn] Creating log file...\r\n\r\n");
 			quit = true;
 			
 		}
 		
 		if (!quit) System.out.println("____________________________________________________\r\n\r\n\r\n[Darkest Hour] Bot is online.");
-		else;
 
 		Scanner scanner = new Scanner(System.in);
 		
@@ -52,7 +51,7 @@ public class Main {
 			switch (scanner.nextLine().trim().toLowerCase()) {
 				
 				case "quit":
-					System.out.println("\r\n[Darkest Hour] Closing current connection...");
+					System.out.println("\r\n[Darkest Dawn] Closing current connection...");
 					api.shutdown();
 					quit = true;
 					break;
@@ -65,7 +64,7 @@ public class Main {
 		}
 
 		scanner.close();
-		System.out.println("[Darkest Hour] Shutting down in five seconds...");
+		System.out.println("[Darkest Dawn] Shutting down in five seconds...");
 		timer.schedule(new TimerTask() {
 			
 			@Override
