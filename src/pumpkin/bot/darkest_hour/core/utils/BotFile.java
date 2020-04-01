@@ -17,8 +17,11 @@ public class BotFile extends Listener {
 	
 	/* Assigned Fields */
 	private File file; // The file/folder being accessed.
+	private File tempfile; // A temporary file used for updating information.
 	private String dir; // The file/folder directory in the form of a string. 
 	private boolean isFile; // Whether this is a file or a folder.
+	private Scanner scanner; // Reads the contents of a File/String.
+	private PrintWriter writer; // Creates/overwrites a file, then writes data to it.
 	
 	
 	
@@ -30,11 +33,52 @@ public class BotFile extends Listener {
 	 * Parameters:
 	 * file - Represents the directory of the file/folder
 	 */
-	public BotFile(String file, boolean isFile) {
+	public BotFile(String file) {
 		
 		this.file = new File(file);
 		this.dir = file;
-		this.isFile = isFile;
+		isFile = this.file.isFile();
+		tempfile = new File(dir.split("[.]")[0] + ".temp");
+		
+	}
+	
+	/* Creates an additional line at the very bottom, writing the 
+	 * passed string to this new line.
+	 */
+	public void add(String content) {
+		
+		try {
+			
+			scanner = new Scanner(file);
+			writer = new PrintWriter(tempfile, "UTF-8");
+			
+			while (scanner.hasNextLine()) writer.println(scanner.nextLine());
+			writer.println(content);
+			
+			writer.close();
+			scanner.close();
+			update();
+			
+		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
+		
+	}
+	
+	/* Creates a copy of the current instance
+	 * of BotFile to the directory indicated
+	 * by the passed String. If a file exists
+	 * with the same directory, name, and
+	 * extension, it will be overwritten. This
+	 * method is not intended for copying 
+	 * folders.
+	 */
+	public void copy(String dest) {
+		
+		try (Scanner scanner = new Scanner(file);
+			 PrintWriter writer = new PrintWriter(dest, "UTF-8")) {
+			
+			while (scanner.hasNextLine()) writer.println(scanner.nextLine());
+			
+		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
 		
 	}
 	
@@ -47,44 +91,11 @@ public class BotFile extends Listener {
 	public void create() {
 		
 		if (isFile) {
-				
-			try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {}
-			catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
 			
+			try { file.createNewFile(); }
+			catch (IOException e) { e.printStackTrace(); }
+		
 		} else file.mkdir();
-	}
-	
-	/* Uses the current instance of BotFile as a
-	 * way to create a new file with the same data
-	 * and name as the file indicated by the directory
-	 * passed to this method in the form of a String.
-	 */
-	public void copyAs(String origin) {
-		
-		try (Scanner scanner = new Scanner(new File(origin));
-			 PrintWriter writer = new PrintWriter(file, "UTF-8")) {
-			
-			while (scanner.hasNextLine()) writer.println(scanner.nextLine());
-			
-		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
-		
-	}
-	
-	/* Uses the current instance of BotFile to 
-	 * create a new file using the name and data
-	 * of the file indicated by the directory
-	 * passed to this method in the form of a
-	 * String.
-	 */
-	public void copyTo(String dest) {
-		
-		try (Scanner scanner = new Scanner(file);
-			 PrintWriter writer = new PrintWriter(dest, "UTF-8")) {
-			
-			while (scanner.hasNextLine()) writer.println(scanner.nextLine());
-			
-		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
-		
 	}
 	
 	/* Overflow version of the original method. 
@@ -113,20 +124,21 @@ public class BotFile extends Listener {
 		
 	}
 	
-	/* Edits a String value from a profile. In any
-	 * file, a key and its value are separated by a
-	 * colon. The left-hand side of the colon represents
-	 * the key. A key is the name and holder of a value,
-	 * and is what the bot looks for when trying to find
-	 * a specific value. A value is the right-hand part
-	 * of the colon, and its a modifiable number or word.
+	/* Edits a String value from a profile. In any file,
+	 * a key and its value are separated by a colon. The
+	 * left-hand side of the colon represents the key. A
+	 * key is the name and holder of a value, and is what
+	 * the bot looks for when trying to find a specific
+	 * value. A value is the right-hand part of the colon,
+	 * and its a modifiable number or word. Also returns
+	 * the value parameter that was passed.
 	 */
-	public void edit(String key, String value) {
+	public String edit(String key, String value) {
 		
-		String tempfile = dir.split("[.]")[0] + ".temp";
-		
-		try (Scanner scanner = new Scanner(file);
-			 PrintWriter writer = new PrintWriter(tempfile, "UTF-8")) {
+		try {
+			
+			scanner = new Scanner(file);
+			writer = new PrintWriter(tempfile, "UTF-8");
 			
 			while (scanner.hasNextLine()) {
 				
@@ -143,16 +155,48 @@ public class BotFile extends Listener {
 				
 			}
 			
-			Scanner scanner2 = new Scanner(new File(tempfile));
-			PrintWriter writer2 = new PrintWriter(file);
-			
-			while (scanner2.hasNextLine()) writer2.println(scanner2.nextLine());
-			
-			scanner2.close();
-			writer2.close();
-			new File(tempfile).delete();
+			scanner.close();
+			writer.close();
+			update();
 			
 		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
+		
+		return value;
+		
+	}
+	
+	/* Overflow version of the original method. Prints
+	 * and returns an integer as opposed to a String.
+	 */
+	public int edit(String key, int value) {
+		
+		try {
+			
+			scanner = new Scanner(file);
+			writer = new PrintWriter(tempfile, "UTF-8");
+					 
+			while (scanner.hasNextLine()) {
+				
+				String line = scanner.nextLine();
+				
+				if (!line.isEmpty()) {
+					
+					String[] split = line.split(": ");
+					
+					if (split[0].equalsIgnoreCase(key)) writer.println(split[0] + value);
+					else writer.println(line);
+					
+				} else writer.println(line);
+				
+			}
+			
+			scanner.close();
+			writer.close();
+			update();
+			
+		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
+		
+		return value;
 		
 	}
 	
@@ -170,9 +214,8 @@ public class BotFile extends Listener {
 		
 		try {
 
-			String tempfile = dir.split("[.]")[0] + ".temp";
-			Scanner scanner = new Scanner(file);
-			PrintWriter writer = new PrintWriter(tempfile, "UTF-8");
+			scanner = new Scanner(file);
+			writer = new PrintWriter(tempfile, "UTF-8");
 			
 			while (scanner.hasNextLine()) {
 				
@@ -202,15 +245,7 @@ public class BotFile extends Listener {
 			
 			scanner.close();
 			writer.close();
-			
-			Scanner scanner2 = new Scanner(new File(tempfile));
-			PrintWriter writer2 = new PrintWriter(file, "UTF-8");
-			
-			while (scanner2.hasNextLine()) writer2.println(scanner2.nextLine());
-			
-			scanner2.close();
-			writer2.close();
-			new File(tempfile).delete();
+			update();
 			
 		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
 		
@@ -297,7 +332,7 @@ public class BotFile extends Listener {
 					
 					for (String index : key) {
 						
-						if (split[0].equalsIgnoreCase(index)) {
+						if (split[0].startsWith(index)) {
 							
 							value.add(split[1]);
 							break;
@@ -316,16 +351,91 @@ public class BotFile extends Listener {
 		
 	}
 	
+	/* Returns a String of all existing keys within a
+	 * file.
+	 */
+	public String findAllKeys() {
+		
+		String value = "";
+		
+		try (Scanner scanner = new Scanner(file)) {
+			
+			while (scanner.hasNextLine()) {
+				
+				String line = scanner.nextLine();
+				
+				if (!line.isEmpty()) {
+					
+					String key = line.split(": ")[0];
+					
+					if (key.startsWith("[")) value += key.split("]")[1] + "\r\n";
+					else value += key + "\r\n";
+					
+				}
+				
+			}
+			
+		} catch (FileNotFoundException e) { e.printStackTrace(); }
+		
+		return value;
+		
+	}
+	
+	/* Similar to find(), this method searches for a key matching
+	 * the String that has been passed. If it finds it, then it
+	 * will return the entire line where it found the matching
+	 * String. If startsWith is set to true, it will instead
+	 * check for if the key begins with the passed String
+	 * as opposed to matching it.
+	 */
+	public String getLine(boolean startsWith, String key) {
+		
+		String value = "";
+		
+		try (Scanner scanner = new Scanner(file)) {
+			
+			while (scanner.hasNextLine()) {
+				
+				String line = scanner.nextLine();
+				
+				if (!line.isEmpty()) {
+					
+					String[] split = line.split(": ");
+					
+					if (line.startsWith("[")) split[0] = split[0].split("]")[1];
+					
+					if (startsWith && split[0].startsWith(key)) {
+					
+						value = line;
+						break;
+							
+					} else if (split[0].equalsIgnoreCase(key)) {
+						
+						value = line;
+						break;
+						
+					}
+					
+				}
+				
+			}
+			
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		return value;
+		
+	}
+	
 	/* Gives a list of all other files within
 	 * this current directory. Does not work
 	 * if the given File isn't recognized as
 	 * a folder.
 	 */
-	public List<String> list() {
+	public String list() {
 		
-		List<String> list = new ArrayList<String>(0);
+		String list = "";
 		
-		for (File index : file.listFiles()) list.add(index.getName());
+		for (File index : file.listFiles()) list += index.getName() + "\r\n";
 		return list;
 		
 	}
@@ -334,6 +444,28 @@ public class BotFile extends Listener {
 	public boolean rename(String name) {
 		
 		return file.renameTo(new File(file.getParentFile() + "/" + name));
+		
+	}
+	
+	/* Internal method exclusive to this class.
+	 * Copies over data from the temporary file to
+	 * the original file, then deletes this temporary
+	 * file.
+	 */
+	private void update() {
+		
+		try {
+			
+			writer = new PrintWriter(file, "UTF-8");
+			scanner = new Scanner(tempfile);
+			
+			while (scanner.hasNextLine()) writer.println(scanner.nextLine());
+			
+			scanner.close();
+			writer.close();
+			tempfile.delete();
+			
+		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
 		
 	}
 
