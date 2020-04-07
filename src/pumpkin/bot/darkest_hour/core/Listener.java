@@ -1,43 +1,54 @@
-package pumpkin.bot.darkest_hour.core;
+package pumpkin.darkest_dawn.core;
 
 import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.Timer;
 
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Category;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.events.channel.text.TextChannelCreateEvent;
-import net.dv8tion.jda.core.events.guild.GuildBanEvent;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.managers.GuildController;
-import pumpkin.bot.darkest_hour.core.tasks.ChatFilter;
-import pumpkin.bot.darkest_hour.core.tasks.Command;
-import pumpkin.bot.darkest_hour.core.tasks.Verify;
-import pumpkin.bot.darkest_hour.core.utils.BotFile;
-import pumpkin.bot.darkest_hour.core.utils.Response;
-import pumpkin.bot.darkest_hour.core.utils.Tool;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Category;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.ReconnectedEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import pumpkin.darkest_dawn.core.tasks.ChatFilter;
+import pumpkin.darkest_dawn.core.tasks.Command;
+import pumpkin.darkest_dawn.core.tasks.Verify;
+import pumpkin.darkest_dawn.core.utils.BotFile;
+import pumpkin.darkest_dawn.core.utils.Response;
+import pumpkin.darkest_dawn.core.utils.Tool;
+
+/* TODO) Steps before completion (Perform a thorough test over each part to ensure all works.)
+ * DONE) Registration and Profile creation.
+ * DONE) ChatFilter class and some BotFile changes
+ * DONE) Setup the init() method
+ * 4) Command class (adjust things to be as user-friendly as possible)
+ * 5) Add necessary Roles and TextChannels
+ * 6) Perform an all-around adjustment to the code
+ * 7) Comment up the place
+ * 8) One final review over everything
+ * 9) Rejoice
+ */
 
 // Reacts to certain events that the bot listens to.
 public class Listener extends ListenerAdapter {
 	
 	/* JDA Default Entities */
-	public JDA jda; // Core of all entities.
-	public Guild guild; // A Server hosted by Discord.
-	public Category category; // Organizes a Guild's channels in a folder-fashion.
-	public TextChannel channel; // Default channel the event was fired from.
-	public Message message; // Text Message sent to Discord.
-	public User user; // Discord account.
-	public Member member; // Guild-specific User.
+	private JDA jda; // Core of all entities.
+	private Guild guild; // A Server hosted by Discord.
+	private Category category; // Organizes a Guild's channels in a folder-fashion.
+	private TextChannel channel; // Default channel the event was fired from.
+	private Message message; // Text Message sent to Discord.
+	private User user; // Discord account.
+	private Member member; // Guild-specific User.
 	
 	/* JDA TextChannels */
 	public TextChannel generalChannel; // #general
@@ -46,105 +57,61 @@ public class Listener extends ListenerAdapter {
 	
 	/* JDA Roles */
 	public Role unverifiedRole; // @Unverified
-	
-	/* JDA Events */
-	public GuildMemberJoinEvent guildMemberJoinEvent;
-	public GuildMemberLeaveEvent guildMemberLeaveEvent;
-	public GuildBanEvent guildBanEvent;
-	public TextChannelCreateEvent textChannelCreateEvent;
-	public GuildMessageReceivedEvent guildMessageReceivedEvent;
-	
-	/* JDA Utils */
-	public GuildController controller; // Performs audit-level actions to a Guild (Server).
+	public Role characterlessRole; // @Characterless
+	public Role playerRole; // @Player
 	
 	/* Java Utils */
-	public PrintWriter writer; // Creates or overwrites a file.
-	public Scanner scanner; // Reads the contents of a file.
-	public Timer timer = new Timer("Listener"); // Delays the contained code block for a specified amount.
+	private PrintWriter writer; // Creates or overwrites a file.
+	private Scanner scanner; // Reads the contents of a file.
+	private Timer timer; // Delays the contained code block for a specified amount.
 
 	/* Custom Utils */
-	public Verify verify; // Verification system for the bot. Uses human logic.
-	public BotFile botFile; // Reads and interacts with files from the bot.
-	public Tool tool; // List of useful tools the bot uses for menial tasks.
-	public Response response; // Contains all bot responses.
-	public ChatFilter filter; // Filters out and deletes specific messages sent to a Guild.
-	public Command command; // Interprets a given command and performs the action requested.
+	private Verify verify; // Verification system for the bot. Uses human logic.
+	private BotFile botFile; // Reads and interacts with files from the bot.
+	private Tool tool; // List of useful tools the bot uses for menial tasks.
+	private Response response; // Contains all bot responses.
+	private ChatFilter filter; // Filters out and deletes specific messages sent to a Guild.
+	private Command command; // Interprets a given command and performs the action requested.
 	
 	/* Other */
-	public String memberTag; // Tag of the user to indicate who the bot is responding to.
-	public String content; // Raw message sent by the user
-	public String userId; // ID of the user
-	public String botMessage; // Response the bot will return
-	public String categoryName; // Name of the category;
-	public String channelName; // Name of the channel
-	public boolean isReady = false; // If it has initialized all the fields it contains
-	public boolean isVerifyTicket = false; // If this newly created channel is a verify ticket
+	private String memberTag; // Tag of the user to indicate who the bot is responding to.
+	private String content; // Raw message sent by the user
+	private String userId; // ID of the user
+	private String botMessage; // Response the bot will return
+	private String categoryName; // Name of the category;
+	private String channelName; // Name of the channel
 	
 	
 	
 		/* JDA EVENTS */
 	
-	/* Fires upon anything detectable by the bot. Its the top-level of all
-	 * other events, meaning they derive their information from this. This
-	 * is used to initialize unchanging entities, such as Guild and
-	 * specified TextChannel/Role objects, as well as per-event entities
-	 * and other fields.
-	 * 
-	 * Parameters:
-	 * event - a number that represents the event type.
-	 */
-	public void init(int code) {
-
-		isVerifyTicket = false;
+	@Override
+	public void onReady(ReadyEvent event) {
 		
-		if (!isReady) {
-			
-			response = new Response();
-			tool = new Tool();
-			verify = new Verify();
-			guild = jda.getGuildById(555972965955665929l);
-			controller = guild.getController();
-			unverifiedRole = guild.getRoleById(613983789093355520l);
-			generalChannel = guild.getTextChannelById(614011250694815753l);
-			beginnersguideChannel = guild.getTextChannelById(555977448639037441l);
-			modlogChannel = guild.getTextChannelById(614750983498760193l);
-			isReady = true;
-			
-		}
+		response = new Response();
+		tool = new Tool();
+		verify = new Verify();
+		timer = new Timer("Listener");
+		guild = event.getJDA().getGuildById(555972965955665929L);
+		unverifiedRole = guild.getRoleById(613983789093355520L);
+		characterlessRole = guild.getRoleById(555977370629177384L); 
+		playerRole = guild.getRoleById(679567617610088488L);
+		generalChannel = guild.getTextChannelById(614011250694815753L);
+		beginnersguideChannel = guild.getTextChannelById(555977448639037441L);
+		modlogChannel = guild.getTextChannelById(614750983498760193L);
 		
-		switch (code) {
-			
-			case 0: // guildMemberJoinEvent
-				member = guildMemberJoinEvent.getMember();
-				userId = user.getId();
-				verify = new Verify();
-				isVerifyTicket = true;
-				break;
-				
-			case 1: // guildMemberLeaveEvent
-				break;
-				
-			case 2: // guildBanEvent
-				break;
-				
-			case 3: // textChannelCreateEvent
-				channel = guild.getTextChannelsByName(userId, false).get(0);
-				break;
-				
-			case 4: // guildMessageReceivedEvent
-				message = guildMessageReceivedEvent.getMessage();
-				channel = guildMessageReceivedEvent.getChannel();
-				member = guildMessageReceivedEvent.getMember();
-				category = message.getCategory();
-				memberTag = "**(" + member.getEffectiveName() + ")** ";
-				channelName = channel.getName();
-				categoryName = category.getName();
-				content = message.getContentRaw();
-				userId = user.getId();
-				botFile = new BotFile("profiles/" + userId + ".verify");
-				break;
-			
-		}
+	}
+	
+	@Override
+	public void onReconnect(ReconnectedEvent event) {
+		
+		guild = event.getJDA().getGuildById(555972965955665929L);
+		unverifiedRole = guild.getRoleById(613983789093355520L);
+		characterlessRole = guild.getRoleById(555977370629177384L); 
+		playerRole = guild.getRoleById(679567617610088488L);
+		generalChannel = guild.getTextChannelById(614011250694815753L);
+		beginnersguideChannel = guild.getTextChannelById(555977448639037441L);
+		modlogChannel = guild.getTextChannelById(614750983498760193L);
 		
 	}
 	
@@ -159,64 +126,66 @@ public class Listener extends ListenerAdapter {
 	@Override
 	public void onGuildMemberJoin(GuildMemberJoinEvent event) {
 
-		guildMemberJoinEvent = event;
 		user = event.getUser();
 		
 		if (!user.isBot()) {
 
-			init(0);
-			
-			new BotFile("profiles/" + userId + ".verify").create("Question: " + verify.getQuestion() + "\r\nAnswer: " + verify.getAnswer());
-			controller.addSingleRoleToMember(member, unverifiedRole).queue();
-			botMessage = response.getWelcome() + verify.getQuestion();
-			controller.createTextChannel(userId).queue();
-			
-		}
-		
-	}
-	
-	/* Fires when a member has left the guild.
-	 * 
-	 * Parameters:
-	 * event - class containing the information pertaining to this event
-	 */
-	@Override
-	public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
-		
-		guildMemberLeaveEvent = event;
-		
-	}
-	
-	/* Fires when a member of a guild is banned.
-	 * 
-	 * Parameters:
-	 * event - class containing the information pertaining to this event
-	 */
-	@Override
-	public void onGuildBan(GuildBanEvent event) {
-		
-		guildBanEvent = event;
-		
-	}
-
-	@Override
-	public void onTextChannelCreate(TextChannelCreateEvent event) {
-
-		textChannelCreateEvent = event;
-		
-		if (isVerifyTicket) {
-
-			init(3);
-			
-			channel.getManager().setSlowmode(30).queue();
-			channel.putPermissionOverride(member).setAllow(Permission.MESSAGE_WRITE).queue();
-			sendGuildMessage(channel, botMessage, false);
+			member = event.getMember();
+			userId = user.getId();
+			new BotFile("profiles/player/" + userId + ".verify").create("Question: " + verify.getQuestion() + "\r\nAnswer: " + verify.getAnswer());
+			guild.addRoleToMember(member, unverifiedRole).queue();
+			sendPrivateMessage(user, response.getVerification() + verify.getQuestion());
 			
 		}
 		
 	}
 	
-	/* Fires when a guild recieves a message.
+	@Override
+	public void onGuildMemberRoleRemove(GuildMemberRoleRemoveEvent event) {
+		
+		botFile = new BotFile("profiles/player/" + user.getId() + ".verify");
+		
+		if (unverifiedRole.getId().equals(event.getRoles().get(0).getId()) && botFile.exists()) {
+
+			user = event.getUser();
+			member = event.getMember();
+			botFile.delete();
+			new BotFile("profiles/player/registered/" + userId + ".profile").create(response.getPrefs());
+			guild.removeRoleFromMember(member, guild.getRoleById(613983789093355520l)).queue();
+			guild.addRoleToMember(member, characterlessRole).queue();
+			guild.addRoleToMember(member, playerRole).queue();
+			sendPrivateMessage(user, response.getVerifySuccess());
+			sendGuildMessage(generalChannel, response.getNewMember(member.getAsMention()));
+			
+		}
+		
+	}
+	
+	@Override
+	public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
+		
+		user = event.getAuthor();
+		userId = user.getId();
+		botFile = new BotFile("profiles/player/" + userId + ".verify");
+		content = event.getMessage().getContentRaw();
+		
+		if (botFile.exists()) {
+			
+			if (verify.check(content, botFile.find("answer"))) {
+
+				botFile.delete();
+				new BotFile("profiles/player/registered/" + userId + ".profile").create(response.getPrefs());
+				guild.removeRoleFromMember(member, guild.getRoleById(613983789093355520l)).queue();
+				sendPrivateMessage(user, response.getVerifySuccess());
+				sendGuildMessage(generalChannel, response.getNewMember(member.getAsMention()));
+				
+			} else sendPrivateMessage(user, response.getVerifyFailure());
+			
+		}
+		
+	}
+	
+	/* Fires when a guild receives a message.
 	 * 
 	 * Parameters:
 	 * event - class containing the information pertaining to this event
@@ -224,49 +193,28 @@ public class Listener extends ListenerAdapter {
 	@Override
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
 
-		guildMessageReceivedEvent = event;
 		user = event.getAuthor();
 		
 		if (!user.isBot()) {
 
-			init(4);
+			channel = event.getChannel();
+			message = event.getMessage();
+			content = message.getContentRaw();
 			
-			if (botFile.exists()) { // If the user needs to be verified
-					
-				if (verify.check(content, botFile.find("answer"))) { // If the user gave the correct answer
+			if (new ChatFilter(content).check() && !channelName.startsWith("•")) { // If the message contained a blacklisted word/phrase wi.
 
-					botFile.delete();
-					new BotFile("profiles/registered/" + userId + "/").create();
-					new BotFile("profiles/registered/" + userId + "/prefs.ini").create();
-					new BotFile("profiles/registered/" + userId + "/profile.info").create();
-					controller.removeSingleRoleFromMember(member, guild.getRoleById(613983789093355520l)).queue();
-					channel.delete().queue();
-					sendGuildMessage(response.getNewMember(member.getAsMention(), beginnersguideChannel.getAsMention()), false);
-					
-				} else sendGuildMessage(response.getVerifyFailure(), false);
+				message.delete().queue();
+				sendGuildMessage(modlogChannel, response.getBlockedMessage(channel.getAsMention(), member.getAsMention(), content));
 				
-			} else {
+			} else if (content.startsWith("$") && channel.getName().equals("bot-commands")) {
 				
-				if (new ChatFilter(content, channelName).check()) { // If this isn't an Rp channel and the message contained a blacklisted word/phrase
-
-					message.delete().queue();
-					sendGuildMessage(modlogChannel, response.getBlockedMessage(channel.getAsMention(), member.getAsMention(), content), false);
-					
-				} else {
-					
-					if (channelName.equals("bot-commands") && content.startsWith("$")) { // If this is a command
-						
-						command = new Command(message);
-						
-						if (command.resolve()); // If the command is valid
-						else command.getError();
-						
-					}
-					
-				}
+				command = new Command(user, message);
+				
+				if (command.isPrivateMsg()) for (String index : command.getResponse()) sendPrivateMessage(user, index);
+				else for (String index : command.getResponse()) sendGuildMessage(index);
 				
 			}
-			
+							
 		}
 		
 	}
@@ -280,10 +228,9 @@ public class Listener extends ListenerAdapter {
 	 * Parameters:
 	 * content - Message being sent
 	 */
-	public void sendGuildMessage(String content, boolean willTag) {
+	public void sendGuildMessage(String content) {
 		
-		if (willTag) channel.sendMessage(memberTag + content).queue();
-		else channel.sendMessage(content).queue();
+		channel.sendMessage(content).queue();
 		
 	}
 	
@@ -292,12 +239,10 @@ public class Listener extends ListenerAdapter {
 	 * Parameters:
 	 * channel - Channel that the message will be sent to
 	 * content - Message being sent
-	 * willTag - If the message will tag the member of the event
 	 */
-	public void sendGuildMessage(TextChannel channel, String content, boolean willTag) {
+	public void sendGuildMessage(TextChannel channel, String content) {
 	
-		if (willTag) channel.sendMessage(memberTag + content).queue();
-		else channel.sendMessage(content).queue();
+		channel.sendMessage(content).queue();
 	
 	}
 	
