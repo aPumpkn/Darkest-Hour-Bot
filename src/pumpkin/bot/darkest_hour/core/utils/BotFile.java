@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -90,12 +91,9 @@ public class BotFile extends Listener {
 	 */
 	public void create() {
 		
-		if (isFile) {
-			
-			try { file.createNewFile(); }
-			catch (IOException e) { e.printStackTrace(); }
+		try { file.createNewFile(); }
+		catch (IOException e) { e.printStackTrace(); }
 		
-		} else file.mkdir();
 	}
 	
 	/* Overflow version of the original method. 
@@ -107,13 +105,20 @@ public class BotFile extends Listener {
 	 * content - What will be written to this file
 	 */
 	public void create(String content) {
-		
-		if (isFile) {
-				
-			try (PrintWriter writer = new PrintWriter(file, "UTF-8")) { writer.println(content); }
-			catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
 			
-		} else file.mkdir();
+		try (PrintWriter writer = new PrintWriter(file, "UTF-8")) { writer.println(content); }
+		catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
+			
+	}
+
+	/* Creates a folder in the bot.
+	 *
+	 * Parameters:
+	 * content - What will be written to this file
+	 */
+	public void createFolder() {
+		
+		file.mkdir();
 		
 	}
 	
@@ -214,8 +219,10 @@ public class BotFile extends Listener {
 		
 		try {
 
+			List<String> list = new ArrayList<String>(Arrays.asList(keysAndVals));
 			scanner = new Scanner(file);
 			writer = new PrintWriter(tempfile, "UTF-8");
+			boolean found = false;
 			
 			while (scanner.hasNextLine()) {
 				
@@ -226,20 +233,28 @@ public class BotFile extends Listener {
 					String[] split = line.split(": ");
 					String value = split[1];
 					
-					for (int i = 0; i < keysAndVals.length; i++) {
+					for (int i = 0; i < list.size(); i++) {
 						
-						if (split[0].equalsIgnoreCase(keysAndVals[i])) {
+						if (split[0].equalsIgnoreCase(list.get(i))) {
 						
-							value = keysAndVals[i + 1];
+							found = true;
+							value = list.get(i + 1);
+							list.remove(i);
+							list.remove(i + 1);
 							break;
 							
 						} else i++;
 						
 					}
 					
-					writer.println(split[0] + ": " + value);
+					if (found) {
+						
+						writer.println(split[0] + ": " + value);
+						found = false;
 					
-				} else writer.println(line);
+					} else writer.println(line);
+					
+				} else writer.println();
 				
 			}
 			
@@ -285,7 +300,7 @@ public class BotFile extends Listener {
 				if (!line.isEmpty()) {
 					
 					String[] split = line.split(": ");
-						
+					
 					if (split[0].equalsIgnoreCase(key)) {
 						
 						value = split[1];
@@ -316,9 +331,10 @@ public class BotFile extends Listener {
 	 * Parameters:
 	 * key - Words or phrases to look for
 	 */
-	public List<String> find(String... key) {
+	public List<String> find(String... keys) {
 		
 		List<String> value = new ArrayList<String>(0);
+		List<String> list = new ArrayList<String>(Arrays.asList(keys));
 		
 		try (Scanner scanner = new Scanner(file)) {
 			
@@ -329,17 +345,18 @@ public class BotFile extends Listener {
 				if (!line.isEmpty()) {
 					
 					String[] split = line.split(": ");
+					String found = "";
 					
-					for (String index : key) {
-						
+					for (String index : list)
 						if (split[0].startsWith(index)) {
 							
 							value.add(split[1]);
+							found = index;
 							break;
 							
 						}
-						
-					}
+					
+					if (!found.isEmpty()) list.remove(found);
 				
 				}
 				
@@ -388,7 +405,7 @@ public class BotFile extends Listener {
 	 * check for if the key begins with the passed String
 	 * as opposed to matching it.
 	 */
-	public String getLine(boolean startsWith, String key) {
+	public String getLine(String key) {
 		
 		String value = "";
 		
@@ -402,17 +419,55 @@ public class BotFile extends Listener {
 					
 					String[] split = line.split(": ");
 					
-					if (line.startsWith("[")) split[0] = split[0].split("]")[1];
-					
-					if (startsWith && split[0].startsWith(key)) {
+					if (line.contains("|")) split[0] = split[0].split("|")[1];
+					if (split[0].equalsIgnoreCase(key)) {
 					
 						value = line;
 						break;
 							
-					} else if (split[0].equalsIgnoreCase(key)) {
+					}
+					
+				}
+				
+			}
+			
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		return value;
+		
+	}
+	
+	/* Similar to find(), this method searches for a key matching
+	 * the String that has been passed. If it finds it, then it
+	 * will return the entire line where it found the matching
+	 * String. If startsWith is set to true, it will instead
+	 * check for if the key begins with the passed String
+	 * as opposed to matching it.
+	 */
+	public List<String> getList(String... keys) {
+		
+		List<String> value = new ArrayList<String>(0);
+		
+		try (Scanner scanner = new Scanner(file)) {
+			
+			while (scanner.hasNextLine()) {
+				
+				String line = scanner.nextLine();
+				
+				if (!line.isEmpty()) {
+					
+					String[] split = line.split(": ");
+					
+					if (line.startsWith("[")) split[0] = split[0].split("]")[1];
+					
+					for (String index : keys) {
 						
-						value = line;
-						break;
+						if (split[0].startsWith(index)) {
+							
+							value.add(split[0]);
+							value.add(split[1]);
+							break;
+						}
 						
 					}
 					
@@ -437,6 +492,29 @@ public class BotFile extends Listener {
 		
 		for (File index : file.listFiles()) list += index.getName() + "\r\n";
 		return list;
+		
+	}
+	
+	public void remove(String content) {
+		
+		try {
+			
+			writer = new PrintWriter(tempfile, "UTF-8");
+			scanner = new Scanner(file);
+			
+			while (scanner.hasNextLine()) {
+				
+				String line = scanner.nextLine();
+				
+				if (!line.split(": ")[0].contains(content)) writer.println(line);
+				
+			}
+			
+			writer.close();
+			scanner.close();
+			update();
+			
+		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
 		
 	}
 	
