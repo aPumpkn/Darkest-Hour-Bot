@@ -1,9 +1,11 @@
 package pumpkin.darkest_dawn.core;
 
+import java.awt.Color;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.Timer;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Category;
 import net.dv8tion.jda.api.entities.Guild;
@@ -62,7 +64,7 @@ public class Listener extends ListenerAdapter {
 	
 	/* Java Utils */
 	private PrintWriter writer; // Creates or overwrites a file.
-	private Scanner scanner; // Reads the contents of a file.
+	private Scanner scanner; // Reads the contents of a String.
 	private Timer timer; // Delays the contained code block for a specified amount.
 
 	/* Custom Utils */
@@ -145,13 +147,13 @@ public class Listener extends ListenerAdapter {
 		
 		botFile = new BotFile("profiles/player/" + user.getId() + ".verify");
 		
-		if (unverifiedRole.getId().equals(event.getRoles().get(0).getId()) && botFile.exists()) {
+		if (botFile.exists() && unverifiedRole.getId().equals(event.getRoles().get(0).getId())) {
 
 			user = event.getUser();
 			member = event.getMember();
 			botFile.delete();
 			new BotFile("profiles/player/registered/" + userId + ".profile").create(response.getPrefs());
-			guild.removeRoleFromMember(member, guild.getRoleById(613983789093355520l)).queue();
+			guild.removeRoleFromMember(member, unverifiedRole).queue();
 			guild.addRoleToMember(member, characterlessRole).queue();
 			guild.addRoleToMember(member, playerRole).queue();
 			sendPrivateMessage(user, response.getVerifySuccess());
@@ -164,18 +166,21 @@ public class Listener extends ListenerAdapter {
 	@Override
 	public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
 		
-		user = event.getAuthor();
-		userId = user.getId();
 		botFile = new BotFile("profiles/player/" + userId + ".verify");
-		content = event.getMessage().getContentRaw();
 		
 		if (botFile.exists()) {
+
+			user = event.getAuthor();
+			userId = user.getId();
+			content = event.getMessage().getContentRaw();
 			
 			if (verify.check(content, botFile.find("answer"))) {
 
 				botFile.delete();
 				new BotFile("profiles/player/registered/" + userId + ".profile").create(response.getPrefs());
-				guild.removeRoleFromMember(member, guild.getRoleById(613983789093355520l)).queue();
+				guild.removeRoleFromMember(member, unverifiedRole).queue();
+				guild.addRoleToMember(member, playerRole).queue();
+				guild.addRoleToMember(member, characterlessRole).queue();
 				sendPrivateMessage(user, response.getVerifySuccess());
 				sendGuildMessage(generalChannel, response.getNewMember(member.getAsMention()));
 				
@@ -209,12 +214,11 @@ public class Listener extends ListenerAdapter {
 			} else if (content.startsWith("$") && channel.getName().equals("bot-commands")) {
 				
 				command = new Command(user, message);
-				
-				if (command.isPrivateMsg()) for (String index : command.getResponse()) sendPrivateMessage(user, index);
-				else for (String index : command.getResponse()) sendGuildMessage(index);
+				if (command.isPrivateMsg()) for (String index : command.getLongResponse()) sendPrivateMessage(user, index);
+				else sendGuildMessage(command.getResponse());
 				
 			}
-							
+			
 		}
 		
 	}
@@ -231,6 +235,16 @@ public class Listener extends ListenerAdapter {
 	public void sendGuildMessage(String content) {
 		
 		channel.sendMessage(content).queue();
+		
+	}
+
+	public void sendGuildEmbed(String title, String content, int color) {
+		
+		EmbedBuilder embed = new EmbedBuilder();
+		embed.setTitle(title);
+		embed.setDescription(content);
+		embed.setColor(new Color(color));
+		channel.sendMessage(embed.build()).queue();
 		
 	}
 	
