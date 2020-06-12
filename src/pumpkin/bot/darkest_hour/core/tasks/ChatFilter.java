@@ -4,7 +4,7 @@ package pumpkin.darkest_dawn.core.tasks;
 NOTE: filter doesn't run if the channel is marked with the â€¢ symbol. */
 public class ChatFilter {
 	
-	private String[] phrases = {/* Censored for your health lol */};
+	private String[] phrases = {/*Censored*/};
 	private String message; // Message from the user
 	
 	public ChatFilter(String message) {
