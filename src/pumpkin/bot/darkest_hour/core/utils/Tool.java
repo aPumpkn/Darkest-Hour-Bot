@@ -10,7 +10,7 @@ import java.util.Scanner;
 public class Tool {
 
 	
-	private int integer;
+	public int integer;
 	NumberFormat numeric = NumberFormat.getNumberInstance(Locale.US);
 	
 	
@@ -27,7 +27,7 @@ public class Tool {
 		String[] array = content.split("[-_]");
 		content = "";
 		
-		for (String a : array) content += a.substring(0,1).toUpperCase() + a.substring(1).toLowerCase() + " ";
+		for (String a : array) content += a.substring(0, 1).toUpperCase() + a.substring(1).toLowerCase() + " ";
 		return content.trim();
 		
 	}
@@ -62,7 +62,6 @@ public class Tool {
 
 		scanner.close();
 		if (!part.isEmpty()) list.add(part);
-		System.out.println(list.size());
 		return list;
 		
 	}
