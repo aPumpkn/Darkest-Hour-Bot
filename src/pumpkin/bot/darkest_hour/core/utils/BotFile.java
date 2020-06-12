@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 import pumpkin.darkest_dawn.core.Listener;
 
-// Reads and interacts with files and folders from the bot. 
+// Reads and interacts with files and folders from the bot.
 public class BotFile extends Listener {
 	
 	
@@ -20,7 +20,6 @@ public class BotFile extends Listener {
 	private File file; // The file/folder being accessed.
 	private File tempfile; // A temporary file used for updating information.
 	private String dir; // The file/folder directory in the form of a string. 
-	private boolean isFile; // Whether this is a file or a folder.
 	private Scanner scanner; // Reads the contents of a File/String.
 	private PrintWriter writer; // Creates/overwrites a file, then writes data to it.
 	
@@ -38,7 +37,6 @@ public class BotFile extends Listener {
 		
 		this.file = new File(file);
 		this.dir = file;
-		isFile = this.file.isFile();
 		tempfile = new File(dir.split("[.]")[0] + ".temp");
 		
 	}
@@ -52,9 +50,9 @@ public class BotFile extends Listener {
 			
 			scanner = new Scanner(file);
 			writer = new PrintWriter(tempfile, "UTF-8");
-			
+					
 			while (scanner.hasNextLine()) writer.println(scanner.nextLine());
-			writer.println(content);
+			writer.print(content);
 			
 			writer.close();
 			scanner.close();
@@ -83,7 +81,7 @@ public class BotFile extends Listener {
 		
 	}
 	
-	/* Creates a file/folder in the bot. This method
+	/* Creates a file in the bot. This method
 	 * does not write any data to this file/folder.
 	 *
 	 * Parameters:
@@ -129,14 +127,14 @@ public class BotFile extends Listener {
 		
 	}
 	
-	/* Edits a String value from a profile. In any file,
+	/* Edits a String value from a file. In any file,
 	 * a key and its value are separated by a colon. The
 	 * left-hand side of the colon represents the key. A
 	 * key is the name and holder of a value, and is what
 	 * the bot looks for when trying to find a specific
 	 * value. A value is the right-hand part of the colon,
 	 * and its a modifiable number or word. Also returns
-	 * the value parameter that was passed.
+	 * the value of the parameter that was passed.
 	 */
 	public String edit(String key, String value) {
 		
@@ -152,8 +150,11 @@ public class BotFile extends Listener {
 				if (!line.isEmpty()) {
 					
 					String[] split = line.split(": ");
+					String check = "";
 					
-					if (split[0].equalsIgnoreCase(key)) writer.println(split[0] + value);
+					if (split[0].contains("|")) check = split[0].split("[|]")[1];
+					else check = split[0];
+					if (check.equalsIgnoreCase(key)) writer.println(split[0] + ": " + value);
 					else writer.println(line);
 					
 				} else writer.println(line);
@@ -187,8 +188,11 @@ public class BotFile extends Listener {
 				if (!line.isEmpty()) {
 					
 					String[] split = line.split(": ");
+					String check = "";
 					
-					if (split[0].equalsIgnoreCase(key)) writer.println(split[0] + value);
+					if (split[0].contains("|")) check = split[0].split("[|]")[1];
+					else check = split[0];
+					if (check.equalsIgnoreCase(key)) writer.println(split[0] + ": " + value);
 					else writer.println(line);
 					
 				} else writer.println(line);
@@ -234,13 +238,17 @@ public class BotFile extends Listener {
 					String value = split[1];
 					
 					for (int i = 0; i < list.size(); i++) {
+
+						String check = "";
 						
-						if (split[0].equalsIgnoreCase(list.get(i))) {
+						if (split[0].contains("|")) check = split[0].split("[|]")[1];
+						else check = split[0];
+						if (check.equalsIgnoreCase(list.get(i))) {
 						
 							found = true;
 							value = list.get(i + 1);
-							list.remove(i);
 							list.remove(i + 1);
+							list.remove(i);
 							break;
 							
 						} else i++;
@@ -301,9 +309,50 @@ public class BotFile extends Listener {
 					
 					String[] split = line.split(": ");
 					
+					if (split[0].contains("|")) split[0] = split[0].split("[|]")[1];
 					if (split[0].equalsIgnoreCase(key)) {
 						
 						value = split[1];
+						break;
+						
+					}
+				
+				}
+				
+			}
+			
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		return value;
+		
+	}
+	
+	public String findLines(String key) {
+		
+		String value = "";
+		
+		try (Scanner scanner = new Scanner(file)) {
+			
+			while (scanner.hasNextLine()) {
+				
+				String line = scanner.nextLine();
+				
+				if (!line.isEmpty()) {
+					
+					String[] split = line.split(": ");
+					
+					if (split[0].contains("|")) split[0] = split[0].split("[|]")[1];
+					if (split[0].equalsIgnoreCase(key)) {
+						
+						value = split[1];
+						
+						do {
+							
+							line = scanner.nextLine();
+							value += "\r\n" + line;
+							
+						} while (!line.isEmpty());
+						
 						break;
 						
 					}
@@ -345,18 +394,16 @@ public class BotFile extends Listener {
 				if (!line.isEmpty()) {
 					
 					String[] split = line.split(": ");
-					String found = "";
 					
+					if (split[0].contains("|")) split[0] = split[0].split("[|]")[1];
 					for (String index : list)
-						if (split[0].startsWith(index)) {
+						if (split[0].equalsIgnoreCase(index)) {
 							
 							value.add(split[1]);
-							found = index;
+							list.remove(index);
 							break;
 							
 						}
-					
-					if (!found.isEmpty()) list.remove(found);
 				
 				}
 				
@@ -381,7 +428,7 @@ public class BotFile extends Listener {
 				
 				String line = scanner.nextLine();
 				
-				if (!line.isEmpty()) {
+				if (line.contains(":")) {
 					
 					String key = line.split(": ")[0];
 					
@@ -419,24 +466,25 @@ public class BotFile extends Listener {
 					
 					String[] split = line.split(": ");
 					
-					if (line.contains("|")) split[0] = split[0].split("|")[1];
-					if (split[0].equalsIgnoreCase(key)) {
+					if (split[0].contains("|")) {
 					
-						value = line;
-						break;
-							
-					}
+						String[] keySplit = split[0].split("[|]");
+						
+						if (keySplit[0].equalsIgnoreCase(key) || 
+							keySplit[1].equalsIgnoreCase(key)) value += line + "\r\n";
+						
+					} else if (split[0].equalsIgnoreCase(key)) value += line + "\r\n";
 					
 				}
 				
 			}
 			
 		} catch (IOException e) { e.printStackTrace(); }
-		
-		return value;
+
+		return value.trim();
 		
 	}
-	
+		
 	/* Similar to find(), this method searches for a key matching
 	 * the String that has been passed. If it finds it, then it
 	 * will return the entire line where it found the matching
@@ -457,16 +505,22 @@ public class BotFile extends Listener {
 				if (!line.isEmpty()) {
 					
 					String[] split = line.split(": ");
+					String alternate = "";
 					
-					if (line.startsWith("[")) split[0] = split[0].split("]")[1];
+					if (split[0].contains("|")) {
+
+						String[] temp = split[0].split("[|]");
+						alternate = temp[0];
+						split[0] = temp[1];
 					
-					for (String index : keys) {
+					} for (String index : keys) {
 						
-						if (split[0].startsWith(index)) {
+						if (split[0].equalsIgnoreCase(index) || alternate.equalsIgnoreCase(index)) {
 							
 							value.add(split[0]);
 							value.add(split[1]);
 							break;
+							
 						}
 						
 					}
@@ -480,8 +534,23 @@ public class BotFile extends Listener {
 		return value;
 		
 	}
+
+	/* Returns all readable data from a file in the form of a String. */
+	public String getAll() {
+		
+		String value = "";
+		
+		try (Scanner scanner = new Scanner(file)) {
+			
+			while (scanner.hasNextLine()) value += scanner.nextLine() + "\r\n";
+			
+		} catch (FileNotFoundException e) { e.printStackTrace(); }
+		
+		return value.trim();
+		
+	}
 	
-	/* Gives a list of all other files within
+	/* Gives a list of all other folders within
 	 * this current directory. Does not work
 	 * if the given File isn't recognized as
 	 * a folder.
@@ -505,8 +574,36 @@ public class BotFile extends Listener {
 			while (scanner.hasNextLine()) {
 				
 				String line = scanner.nextLine();
+				String[] split = line.split(":");
 				
-				if (!line.split(": ")[0].contains(content)) writer.println(line);
+				if (split[0].contains("|")) split[0] = split[0].split("[|]")[1];
+				if (!split[0].equalsIgnoreCase(content)) writer.println(line);
+				
+			}
+			
+			writer.close();
+			scanner.close();
+			update();
+			
+		} catch (FileNotFoundException | UnsupportedEncodingException e) { e.printStackTrace(); }
+		
+	}
+	
+	public void removeLines(String content) {
+		
+		try {
+			
+			writer = new PrintWriter(tempfile, "UTF-8");
+			scanner = new Scanner(file);
+			
+			while (scanner.hasNextLine()) {
+				
+				String line = scanner.nextLine();
+				String[] split = line.split(":");
+				
+				if (split[0].contains("|")) split[0] = split[0].split("[|]")[1];
+				if (!split[0].equalsIgnoreCase(content)) writer.println(line);
+				else if (line.contains(":")) do line = scanner.nextLine(); while (!line.isEmpty()); 
 				
 			}
 			
