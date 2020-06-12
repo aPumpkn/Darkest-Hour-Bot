@@ -6,6 +6,7 @@ import java.util.Locale;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import pumpkin.darkest_dawn.core.Listener;
 import pumpkin.darkest_dawn.core.utils.BotFile;
 import pumpkin.darkest_dawn.core.utils.Response;
 import pumpkin.darkest_dawn.core.utils.Tool;
@@ -25,7 +26,9 @@ import pumpkin.darkest_dawn.core.utils.Tool;
 
 public class Command extends Response {
 	
+	Listener listener = new Listener();
 	private String[] command;
+	private String message; // The actual Message object passed to the constructor
 	private int args; // Amount of arguments in the command
 	private int value; // The numeric argument in the command
 	private String mention; // Mentioned user in the command
@@ -34,7 +37,7 @@ public class Command extends Response {
 	private String response;
 	private boolean privateMsg;
 	private Tool tool = new Tool();
-	private BotFile botFile;
+	private BotFile botFile; // The default file to be edited.
 	
 	public Command(User user, Message message) {
 
@@ -44,16 +47,21 @@ public class Command extends Response {
 		if (mentions.isEmpty()) mention = "";
 		else mention = mentions.get(0).getId();
 		
-		command = message.getContentRaw().trim().replaceAll(" +", " ").toLowerCase().split(" ");
+		this.message = message.getContentRaw().trim().replaceAll(" +", " ");
+		command = this.message.toLowerCase().split(" ");
 		character = "";
-		response = null;
 		privateMsg = false;
 		args = command.length;
 		
+		response = "Lorem ipsum dolor sit amet...";
+		
 		switch (command[0]) {
 		
+			case "$test":
+				break;
+		
 			/* 
-			 * $char create <@user> <name>
+			 * $char create <@user> <name> <type>
 			 * $char delete <name>
 			 * $char backup <name>
 			 * $char backup *
@@ -63,11 +71,11 @@ public class Command extends Response {
 			case "$char":
 				switch (args) {
 				
-					case 4:
+					case 5:
 						character = "profiles/character/" + tool.capitalize(command[3]) + "/";
 						if (command[1].equals("create")) character(0);
 						else; // Error Handling: (Syntax Error)
-						
+						break;
 						
 						
 					case 3: 
@@ -100,7 +108,7 @@ public class Command extends Response {
 							case "list":
 								character(2);
 								break;
-								
+							
 							case "info":
 								character(6);
 								break;
@@ -130,17 +138,17 @@ public class Command extends Response {
 				switch (args) {
 				
 					case 1:
-						botFile = new BotFile("profiles/character/" + new BotFile("profiles/player/" + this.user + ".profile").find("default character") + "/general.info");
+						botFile = new BotFile("profiles/character/" + new BotFile("profiles/player/registered/" + this.user + ".profile").find("default character") + "/inventory.info");
 						balance("wallet", 0);
 						break;
 						
 					case 2:
-						botFile = new BotFile("profiles/character/" + tool.capitalize(command[1]) + "/general.info");
+						botFile = new BotFile("profiles/character/" + tool.capitalize(command[1]) + "/inventory.info");
 						balance("wallet", 0);
 						break;
 						
 					case 4:
-						botFile = new BotFile("profiles/character/" + tool.capitalize(command[2]) + "/general.info");
+						botFile = new BotFile("profiles/character/" + tool.capitalize(command[2]) + "/inventory.info");
 						switch (command[1]) {
 						
 							case "set":
@@ -179,17 +187,17 @@ public class Command extends Response {
 				switch (args) {
 				
 					case 1:
-						botFile = new BotFile("profiles/player/" + this.user + ".profile");
+						botFile = new BotFile("profiles/player/registered/" + this.user + ".profile");
 						balance("dmp", 0);
 						break;
 						
 					case 2:
-						botFile = new BotFile("profiles/player/" + mention + ".profile");
+						botFile = new BotFile("profiles/player/registered/" + mention + ".profile");
 						balance("dmp", 0);
 						break;
 						
 					case 4:
-						botFile = new BotFile("profiles/player/" + mention + ".profile");
+						botFile = new BotFile("profiles/player/registered/" + mention + ".profile");
 						switch (command[1]) {
 						
 							case "set":
@@ -236,7 +244,7 @@ public class Command extends Response {
 						break;
 						
 					case 3:
-						botFile = new BotFile("profiles/character/" + new BotFile("profiles/player/" + this.user + ".profile").find("default character") + "/general.info");
+						botFile = new BotFile("profiles/character/" + new BotFile("profiles/player/registered/" + this.user + ".profile").find("default character") + "/inventory.info");
 						switch (command[1]) {
 							
 							case "buy":
@@ -253,7 +261,7 @@ public class Command extends Response {
 						} break;
 						
 					case 4:
-						botFile = new BotFile("profiles/character/" + command[2] + "/general.info");
+						botFile = new BotFile("profiles/character/" + command[3] + "/inventory.info");
 						switch (command[1]) {
 						
 							case "buy":
@@ -272,7 +280,7 @@ public class Command extends Response {
 						
 						
 					case 5:
-						botFile = new BotFile("profiles/character/" + command[2] + "/general.info");
+						botFile = new BotFile("profiles/character/" + command[3] + "/inventory.info");
 						switch (command[1]) {
 						
 							case "buy":
@@ -297,6 +305,25 @@ public class Command extends Response {
 				
 				
 				
+			case "$prefs":
+				switch (args) {
+				
+					case 2:
+						botFile = new BotFile("profiles/player/registered/" + user.getId() + ".profile");
+						if (command[1].equals("list")) prefs(0);
+						else;
+						break;
+						
+					case 3:
+						botFile = new BotFile("profiles/player/registered/" + user.getId() + ".profile");
+						character = tool.capitalize(command[2]);
+						if (command[1].equals("default")) prefs(1);
+						else;
+						break;
+				
+				} break;
+				
+				
 				
 			/* $stats <type>
 			 * $stats <type> <char>
@@ -308,31 +335,40 @@ public class Command extends Response {
 			 * $stats create <char> <type> <name>
 			 * $stats delete <char> <stat>
 			 */
-			case "$stats": // TODO:
+			case "$stats":
 				switch (args) {
 				
 					case 2:
-						character = new BotFile("profiles/player/" + this.user + ".profile").find("default character");
+						character = new BotFile("profiles/player/registered/" + this.user + ".profile").find("default character");
 						botFile = new BotFile("profiles/character/" + character + "/stats.info");
-						stats(0, command[1]);
+						stats(tool.capitalize(command[1]), 0);
 						break;
 				
 					case 3:
 						character = tool.capitalize(command[2]);
 						botFile = new BotFile("profiles/character/" + character + "/stats.info");
-						stats(0, command[1]);
+						stats(tool.capitalize(command[1]), 0);
 						break;
 						
 					case 4:
 						switch (command[1]) {
 						
-							case "add":
+							case "up":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 3);
 								break;
 								
-							case "remove":
+							case "down":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 3);
 								break;
 							
 							case "delete":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 2);
 								break;
 								
 							default:
@@ -342,14 +378,41 @@ public class Command extends Response {
 						
 					case 5:
 						switch (command[1]) {
-						
+
+							case "up":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 3);
+								break;
+								
+							case "down":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 3);
+								break;
+							
 							case "add":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 5);
 								break;
 								
 							case "remove":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 5);
+								break;
+								
+							case "set":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 6);
 								break;
 								
 							case "create":
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/stats.info");
+								stats(tool.capitalize(command[3]), 1);
 								break;
 								
 							default:
@@ -369,29 +432,54 @@ public class Command extends Response {
 			 * $train <char>
 			 * $train add <char> <stat> <amount>
 			 * $train remove <char> <stat> <amount>
+			 * $train set <char> <stat> <amount>
 			 * $train reset <char>
 			 * $train reset *
 			 */
-			case "$train": // TODO:
+			case "$train":
 				switch (args) {
 				
 					case 1:
+						character = new BotFile("profiles/player/registered/" + user.getId() + ".profile").find("Default Character");
+						botFile = new BotFile("profiles/character/" + character + "/training.info");
+						train("", 0, 0);
 						break;
 						
 					case 2:
+						character = tool.capitalize(command[1]);
+						botFile = new BotFile("profiles/character/" + character + "/training.info");
+						train("", 0, 0);
 						break;
 				
 					case 3:
-						if (command[1].equals("reset"));
-						break;
+						if (command[1].equals("reset")) {
+							
+							if (command[2].equals("*")) train("", 1, 0);
+							else {
+								
+								character = tool.capitalize(command[2]);
+								botFile = new BotFile("profiles/character/" + character + "/training.info");
+								train("", 2, 0);
+								
+							}
+						
+						} break;
 						
 					case 5:
+						character = tool.capitalize(command[2]);
+						botFile = new BotFile("profiles/character/" + character + "/training.info");
 						switch (command[1]) {
 						
 						case "add":
+							train(tool.capitalize(command[3]), 3, Integer.parseInt(command[4]));
 							break;
 							
 						case "remove":
+							train(tool.capitalize(command[3]), 3, Integer.parseInt(command[4]));
+							break;
+							
+						case "set":
+							train(tool.capitalize(command[3]), 4, Integer.parseInt(command[4]));
 							break;
 					
 						} break;
@@ -401,7 +489,28 @@ public class Command extends Response {
 				
 				} break;
 				
+			case "$rank":
+				switch (args) {
 				
+				case 1:
+					character = new BotFile("profiles/player/registered/" + user.getId() + ".profile").find("default character");
+					botFile = new BotFile("profiles/character/" + character + "/general.info");
+					rank(0);
+					break;
+					
+				case 2:
+					character = tool.capitalize(command[1]);
+					botFile = new BotFile("profiles/character/" + character + "/general.info");
+					rank(0);
+					break;
+					
+				case 4:
+					character = tool.capitalize(command[2]);
+					botFile = new BotFile("profiles/character/" + character + "/general.info");
+					if (command[1].equals("set")) rank(1);
+					break;
+				
+				} break;
 				
 				
 			/* $help
@@ -411,9 +520,11 @@ public class Command extends Response {
 				switch (args) {
 				
 					case 1:
-						break;
-						
-					case 2:
+						listener.sendPrivateMessage(user, command1);
+						listener.sendPrivateMessage(user, command2);
+						listener.sendPrivateMessage(user, command3);
+						listener.sendPrivateMessage(user, command4);
+						response = "sent you a pm lol";
 						break;
 						
 					default:
@@ -427,14 +538,32 @@ public class Command extends Response {
 			/* $inv
 			 * $inv <char>
 			 */
-			case "$inv": // TODO:
+			case "$inv":
 				switch (args) {
 				
 					case 1:
-						break;
+						response = "";
+						character = new BotFile("profiles/player/registered/" + user.getId() + ".profile").find("default character");
+						botFile = new BotFile("profiles/character/" + character + "/" + "inventory.info");
+						
+						for (String index : botFile.getAll().split("\r\n")) {
+							
+							String[] split = index.split(": ");
+							response += split[0] + ": **" + split[1] + "**\r\n";
+							
+						} break;
 						
 					case 2:
-						break;
+						response = "";
+						character = tool.capitalize(command[1]);
+						botFile = new BotFile("profiles/character/" + character + "/" + "inventory.info");
+						
+						for (String index : botFile.getAll().split("\r\n")) {
+							
+							String[] split = index.split(": ");
+							response += split[0] + ": **" + split[1] + "**\r\n";
+							
+						} break;
 						
 					default:
 						
@@ -446,14 +575,22 @@ public class Command extends Response {
 				
 			/*$charges
 			 * $charges <char>
-			
+			*/
 			case "$charges":
 				switch (args) {
 				
 					case 1:
+						character = new BotFile("profiles/player/registered/" + user.getId() + ".profile").find("default character");
+						botFile = new BotFile("profiles/character/" + character + "/stats.info");
+						String[] split = botFile.find("charges").split("-");
+						response = "Charges: **" + split[0] + "/" + split[2] + "**";
 						break;
 						
 					case 2:
+						character = tool.capitalize(command[1]);
+						botFile = new BotFile("profiles/character/" + character + "/stats.info");
+						split = botFile.find("charges").split("-");
+						response = "Charges: **" + split[0] + "/" + split[2] + "**";
 						break;
 						
 					default:
@@ -467,29 +604,40 @@ public class Command extends Response {
 			/* $tech list
 			 * $tech list <char>
 			 * $tech <name>
-			 * $tech <char> <name>
+			 * $tech <name> <char> 
 			 * $tech create <char> <name>
-			 
+			 * $tech delete <char> <name>
+			 */
 			case "$tech":
 				switch (args) {
-				
-					case 1:
-						break;
 						
 					case 2:
+						character = new BotFile("profiles/player/registered/" + user.getId() + ".profile").find("Default Character");
+						botFile = new BotFile("profiles/character/" + character + "/techniques.info");
+						if (command[1].equals("list")) tech("", 0);
+						else if (botFile.exists()) tech(tool.capitalize(command[1]), 1);
+						else;
 						break;
 				
 					case 3:
+						character = tool.capitalize(command[2]);
+						botFile = new BotFile("profiles/character/" + character + "/techniques.info");
+						if (command[1].equals("list")) tech("", 0);
+						else if (botFile.exists()) tech(tool.capitalize(command[1]), 1);
+						else;
 						break;
 						
 					case 4:
-						break;
-						
-					case 5:
+						character = tool.capitalize(command[2]);
+						botFile = new BotFile("profiles/character/" + character + "/techniques.info");
+						if (command[1].equals("delete")) tech(tool.capitalize(command[3]), 4);
 						break;
 						
 					default:
-						
+						character = tool.capitalize(command[2]);
+						botFile = new BotFile("profiles/character/" + character + "/techniques.info");
+						if (command[1].equals("create")) tech(tool.capitalize(command[3]), 3);
+						break;
 				
 				} break;
 				
@@ -497,11 +645,9 @@ public class Command extends Response {
 				
 				
 				
-			default: */
+			default: 
 			
 		}
-		
-		response = "Lorem ipsum dolor sit amet...";
 		
 	}
 	
@@ -509,19 +655,70 @@ public class Command extends Response {
 		
 		switch (operation) {
 		
-			case 0: // $char create <@user> <name>
-				new BotFile(character).create();
-				new BotFile(character + "backup/").create();
+			case 0: // $char create <@user> <name> <type>
+				String typeStats = "";
+				switch (tool.capitalize(command[4])) {
+				
+					case "Shinobi":
+						typeStats = getShinobiStats();
+						break;
+						
+					case "Watch User":
+						typeStats = getWatchUserStats();
+						break;
+						
+					case "Osmosian":
+						typeStats = getOsmosianStats();
+						break;
+						
+					case "Magician":
+						typeStats = getMagicianStats(); 
+						break;
+						
+					case "Anodite":
+						typeStats = getAnoditeStats();
+						break;
+						
+					case "Pure Human":
+						typeStats = getPureHumanStats();
+						break;
+						
+					case "Pure Faunus":
+						typeStats = getPureFaunusStats();
+						break;
+						
+					case "Mixed Heritage":
+						typeStats = getMixedHeritageStats();
+						break;
+						
+					case "Halfa":
+						typeStats = getHalfaStats();
+						break;
+						
+					case "Ghost":
+						typeStats = getGhostStats();
+						break;
+						
+					case "Hunter":
+						typeStats = getHunterStats();
+						break;
+						
+					default: // Incorrect Type
+				
+				}
+				
+				new BotFile(character).createFolder();
+				new BotFile(character + "backup/").createFolder();
 				new BotFile(character + "general.info").create("Player: " + mention + "\r\n" + getGeneral());
-				new BotFile(character + "stats.info").create(getStats());
+				new BotFile(character + "stats.info").create(getStats() + typeStats);
 				new BotFile(character + "techniques.info").create();
 				new BotFile(character + "training.info").create(getTraining());
 				new BotFile(character + "inventory.info").create(getInventory());
-				new BotFile(character + "backup/general.info").create("Player: " + mention + "\r\n" + getGeneral());
-				new BotFile(character + "backup/stats.info").create(getStats());
-				new BotFile(character + "backup/techniques.info").create();
-				new BotFile(character + "backup/training.info").create(getTraining());
-				new BotFile(character + "backup/inventory.info").create(getInventory());
+				new BotFile(character + "general.info").copy(character + "backup/general.info");
+				new BotFile(character + "stats.info").copy(character + "backup/stats.info");
+				new BotFile(character + "techniques.info").copy(character + "backup/techniques.info");
+				new BotFile(character + "training.info").copy(character + "backup/training.info");
+				new BotFile(character + "inventory.info").copy(character + "backup/inventory.info");
 				new BotFile(character + "backup/info.bak").create(Calendar.getInstance(Locale.US).getTime().toString());
 				break;
 				
@@ -566,9 +763,6 @@ public class Command extends Response {
 				new BotFile(character + "inventory.info").copy(character + "backup/inventory.info");
 				break;
 				
-			case 6:
-				// TODO: $char info
-				
 		}
 		
 	}
@@ -590,11 +784,11 @@ public class Command extends Response {
 					
 					value = tool.getInteger();
 					
-					if (value < 0) {
+					if (value > -1) {
 							
 						if (botFile.exists()) response = "" + botFile.edit(type, value);
 						else; // Error Handling (File Error: Player doesn't exist.) OR
-						// Error Handling (File Error: Character Doesn't Exists)
+						// Error Handling (File Error: Character Doesn't Exist.)
 						
 					} else; // Error Handling (Calculation Error: Value cannot be negative.)
 					
@@ -605,20 +799,20 @@ public class Command extends Response {
 				
 			case 2: // $wallet/dmp add
 				if (tool.isInteger(command[3])) {
-					
+
 					value = tool.getInteger();
 					
-					if (value < 0) {
-						
+					if (value > 0) {
+
 						if (botFile.exists()) {
-							
+
 							int original = Integer.parseInt(botFile.find(type));
 							int result = value + original;
-							response = original + " " + result + " = " + botFile.edit(type, result);
+							response = original + " + " + value + " = " + botFile.edit(type, result);
 							
 						} else; // Error Handling (File Error: Character Doesn't Exists)
 				
-					} else; // Error Handling (Calculation Error: Value cannot be negative.)
+					} else; // Error Handling (Calculation Error: Value must be greater than 0.)
 					
 				} else; // Error Handling (Calculation Error: Fourth parameter could not be indentified as an integer. You've either excluded a number from this argument, or the number was too large.)
 				break;
@@ -630,8 +824,8 @@ public class Command extends Response {
 					
 					value = tool.getInteger();
 					
-					if (value < 0) {
-							
+					if (value > 0) {
+
 						if (botFile.exists()) {
 															
 							int original = Integer.parseInt(botFile.find(type));
@@ -670,36 +864,38 @@ public class Command extends Response {
 		String item = tool.capitalize(command[2]);
 		
 		if (item.endsWith("s")) item = item.substring(0, item.length() - 1);
-		
+
 		BotFile shop = new BotFile("resources/shop.list");
 		String line = shop.getLine(item);
 		String[] keyval = line.split(": ");
 		String[] splitdash = keyval[1].split("-");
-		String id = keyval[0].split("|")[0];
-		int cost = Integer.parseInt(splitdash[1]) * Integer.parseInt(command[2]);
-		int quantity = Integer.parseInt(splitdash[0]) * Integer.parseInt(command[2]);
-		String value = "";
+		int amount = Integer.parseInt(command[4]);
+		int cost = Integer.parseInt(splitdash[1]) * amount;
+		int quantity = Integer.parseInt(splitdash[0]) * amount;
+		int value = -1;
 		
 		switch (operation) {
 		
-			case 0:
+			case 0: // list
 				response = shop.findAllKeys();
 				break;
 		
 			case 1: // buy
 				botFile.edit("wallet", Integer.parseInt(botFile.find("wallet")) - cost);
-				botFile = new BotFile("profiles/character/" + tool.capitalize(command[3]) + "/inventory.info");
-				value = botFile.find(id + item);
-				if (value.isEmpty()) botFile.add(id + item + ": " + quantity);
-				else botFile.edit(id + item, value + quantity);
+				tool.isInteger(botFile.find(item));
+				value = tool.integer;
+				if (botFile.find(item).isEmpty()) botFile.add(item + ": " + quantity);
+				else botFile.edit(item, value + quantity);
 				break;
 		
 			case 2: // sell
+				tool.isInteger(botFile.find(item));
+				value = tool.integer;
+				if (botFile.find(item).isEmpty()); // can't sell what you don't have
+				else if (value - amount < 1); // don't have enough of the item
+				else botFile.edit(item, value - amount);
 				botFile.edit("wallet", Integer.parseInt(botFile.find("wallet")) + cost);
-				botFile = new BotFile("profiles/character/" + tool.capitalize(command[3]) + "/inventory.info");
-				botFile.find(id + item);
-				if (value.isEmpty()); // ERROR: You do not possess this item.
-				else botFile.edit(id + item, Integer.parseInt(value) - quantity);
+				
 		
 		}
 		
@@ -715,79 +911,66 @@ public class Command extends Response {
 	 * $stats create <char> <type> <name>
 	 * $stats delete <char> <stat>
 	 */
-	private void stats(int operation, String type) {
-		
-		BotFile stats = new BotFile("resources/stats.list");
-		BotFile train = new BotFile("profiles/character/" + tool.capitalize(command[2]) + "/train.info");
-		String rank = botFile.find("rank");
-		int original = Integer.parseInt(botFile.find(command[3]));
-		int diminish = 0;
-		int max = 0;
-		int reward = 0;
-		
+	private void stats(String name, int operation) {
+				
 		switch (operation) {
 		
 			case 0: // $stats <type> OR $stats <type> <char>
+				response = "";
 				int i = 0;
-				switch (type) {
+				switch (name) {
 				
-					case "base":
-						for (String index : botFile.find("perception", "control", "quickness", "brawn", "durability")) {
+					case "Base":
+						for (String index : botFile.getList("b")) {
+							
+							if (i == 0) {
+								
+								i++;
+								response += index + ": ";
+							
+							} else {
+								
+								i = 0;
+								String[] statSplit = index.split("-");
+								response += "**" + statSplit[0] + "**\r\n";
+								
+							}
 						
-							if (i == 0) response += "Perception: **" + index + "**\r\n";
-							else if (i == 1) response += "Control: **" + index + "**\r\n";
-							else if (i == 2) response += "Quickness: **" + index + "**\r\n";
-							else if (i == 3) response += "Brawn: **" + index + "**\r\n";
-							else response += "Durability: **" + index +"**";
-							i++;
+						} break;
+
+					case "Primary":
+						for (String index : botFile.getList("p")) {
+							
+							if (i == 0) {
+								
+								i++;
+								response += index + ": ";
+							
+							} else {
+								
+								i = 0;
+								String[] statSplit = index.split("-");
+								response += "**" + statSplit[0] + "/" + statSplit[2] + "**\r\n";
+								
+							}
 						
 						} break;
 
-					case "primary":
-						for (String index : botFile.find("ninjutsu", "taijutsu", "medical", "fuinjutsu", "puppetry", "genjutsu", "explosives")) {
+					case "Secondary":
+						for (String index : botFile.getList("s")) {
 							
-							if (i == 0) response += "Ninjutsu: **" + index + "/100**\r\n";
-							else if (i == 1) response += "Taijutsu: **" + index + "/100**\r\n";
-							else if (i == 2) response += "Medical: **" + index + "/100**\r\n";
-							else if (i == 3) response += "Fuinjutsu: **" + index + "/100**\r\n";
-							else if (i == 4) response += "Puppetry: **" + index + "/100**\r\n";
-							else if (i == 5) response += "Genjutsu: **" + index + "/100**\r\n";
-							else response += "Explosives: **" + index + "/100**";
-							i++;
+							if (i == 0) {
+								
+								i++;
+								response += index + ": ";
 							
-						} for (String index : botFile.getList("P")) {
-							
-							if (index.contains("(")) response += index.split(")")[1] + ": **";
-							else response += index + "/100**\r\n";
-							
-						} break;
-
-					case "secondary":
-						for (String index : botFile.find("traps", "stealth", "tracking", "scouting", "poisons", "blacksmithing", "architecture")) {
-							
-							if (i == 0) response += "Traps: **" + index + "/50**\r\n";
-							else if (i == 1) response += "Stealth: **" + index + "/50**\r\n";
-							else if (i == 2) response += "Tracking: **" + index + "/50**\r\n";
-							else if (i == 3) response += "Scouting: **" + index + "/50**\r\n";
-							else if (i == 4) response += "Poisons: **" + index + "/50**\r\n";
-							else if (i == 5) response += "Blacksmithing: **" + index + "/75**\r\n";
-							else response += "Architecture: **" + index + "/50**";
-							i++;
-							
-						} for (String index : botFile.getList("S")) {
-							
-							if (index.contains("[")) response += index.split("]")[1] + ": **";
-							else response += index + "/50**\r\n";
-							
-						} break;
-
-					case "custom":
-						for (String index : botFile.getList("S", "P")) {
-							
-							if (index.startsWith("[P")) response += index.split(")")[1] + ": /100**";
-							else if (index.startsWith("[S")) response += index.split(")")[1] + ": /50**";
-							else if (response.endsWith("50")) response = response.split("/")[0] + index + "/50**";
-							else response = response.split("/")[0] + index + "/100**";
+							} else {
+								
+								i = 0;
+								String[] statSplit = index.split("-");
+								response += "**" + statSplit[0] + "/" + statSplit[2] + "**\r\n";
+								
+							}
 						
 						} break;
 						
@@ -797,74 +980,288 @@ public class Command extends Response {
 				} break;
 		
 			case 1: // $stats create <char> <name> <type>
-				botFile.add(tool.capitalize(command[4]) + "|" + tool.capitalize(command[2]));
+				String cat = command[4].substring(0, 1).toUpperCase();
+				int hard = 0;
+				int soft = 0;
+				int inc = 0;
+				
+				if (cat.equals("P")) {
+					
+					hard = 100;
+					soft = 75;
+					inc = 4;
+					
+				} else if (cat.equals("S")) {
+					
+					hard = 50;
+					soft = 40;
+					inc = 3;
+					
+				} else; // ERROR
+				botFile.add("\r\n" + cat + "|" + name + ": 0-" + inc + "-" + hard + "-" + soft);
 				break;
 				
 			case 2: // delete
-				botFile.remove(tool.capitalize(command[3]));
+				botFile.remove(name);
 				break;
 				
-			case 3: // add
-				String[] valsplit = stats.find(command[3]).split("-");
+			case 3: // up & down
+				BotFile train = new BotFile("profiles/character/" + character + "/training.info");
+				String rank = new BotFile("profiles/character/" + character + "/general.info").find("rank");
+				String result = "";
+				String[] line = botFile.getLine(name).split(": ");
+				String[] stat = line[1].split("-");
+				String category = line[0].split("[|]")[0];
+				int original = Integer.parseInt(stat[0]);
+				int reward = Integer.parseInt(stat[1]);
+				int max = Integer.parseInt(stat[2]);
+				boolean other = false;
+				int repeat = 1;
 				
-				if (valsplit.length == 2) { // Primary/Secondary
-					
-					 diminish = Integer.parseInt(valsplit[0]);
-					 max = Integer.parseInt(valsplit[1]);
-					 
-					 if (max == 100) { // Primary
-						 
-						 
-						 
-					 } else { // Secondary
-						 
-						 
-						 
-					 }
-					
-				} else { // Base
+				if (args == 5) repeat = Integer.parseInt(command[4]);
 				
-					max = 640;
-					reward = 10;
+				int multiplier = repeat;
+				
+				while (repeat != 0) {
 					
-					switch (rank) {
-					
-						case "Academy":
-							reward = 2;
-							break;
-
-						case "Initiate":
-							if (original > 79) reward = 5;
-							break;
-
-						case "Captain":
-							if (original > 159) reward = 5;
-							break;
-
-						case "General":
-							if (original > 319) reward = 5;
-							break;
-
-						case "Leader":
-							break;
+					if (command[1].equals("down")) {
+						
+						reward -= reward * 2;
+						String key = "";
+						
+						if (category.equalsIgnoreCase("B")) {
+							
+							List<String> types = train.find(name, "Base");
+							String[] baseSplit = types.get(0).split("/");
+							String[] statSplit = types.get(1).split("/");
+							train.edit(name, String.valueOf(Integer.parseInt(statSplit[0]) + 1) + "/" + statSplit[1], 
+									  "Base", String.valueOf(Integer.parseInt(baseSplit[0]) + 1) + "/" + baseSplit[1]);
+							
+						} else if (category.equalsIgnoreCase("P")) {
+	
+							key = "Primary";
+							String[] statSplit = train.find(key).split("/");
+							train.edit(key, String.valueOf(Integer.parseInt(statSplit[0]) + 1) + "/" + statSplit[1]);
+							
+						} else if (category.equalsIgnoreCase("S")) {
+							
+							key = "Secondary";
+							String[] statSplit = train.find(key).split("/");
+							train.edit(key, String.valueOf(Integer.parseInt(statSplit[0]) + 1) + "/" + statSplit[1]);
+							
+						} else {
+							
+							other = true;
+							String[] statSplit = train.find(name).split("/");
+							train.edit(name, String.valueOf(Integer.parseInt(statSplit[0] + 1) + "/" + statSplit[1]));
+							
+						}
+						
+					} else {
+						
+						String key = "";
+						
+						if (category.equalsIgnoreCase("B")) {
+							
+							List<String> types = train.find(name, "Base");
+							String[] baseSplit = types.get(0).split("/");
+							String[] statSplit = types.get(1).split("/");
+							train.edit(name, String.valueOf(Integer.parseInt(statSplit[0]) - 1) + "/" + statSplit[1], 
+									  "Base", String.valueOf(Integer.parseInt(baseSplit[0]) - 1) + "/" + baseSplit[1]);
+							
+						} else if (category.equalsIgnoreCase("P")) {
+	
+							key = "Primary";
+							String[] statSplit = train.find(key).split("/");
+							train.edit(key, String.valueOf(Integer.parseInt(statSplit[0]) - 1) + "/" + statSplit[1]);
+							
+						} else if (category.equalsIgnoreCase("S")) {
+							
+							key = "Secondary";
+							String[] statSplit = train.find(key).split("/");
+							train.edit(key, String.valueOf(Integer.parseInt(statSplit[0]) - 1) + "/" + statSplit[1]);
+							
+						} else {
+							
+							String[] statSplit = train.find(name).split("/");
+							train.edit(name, String.valueOf(Integer.parseInt(statSplit[0]) - 1) + "/" + statSplit[1]);
+							
+						}
+						
+					} if (!other) {
+						
+						if (rank.equals("Academy")) reward = 2;
+						else if (max == 640) {
+							if ((rank.equals("Initiate") && original > 79) ||
+								(rank.equals("Captain") && original > 159) ||
+								(rank.equals("General") && original > 319)) reward = 5;
+							
+						} else if ((max == 100 && original > 74) || (max != 100 && original > 39)) reward = 2;
 					
 					}
-				
-				} break;
-				
-			case 4: // remove
+					
+					result = String.valueOf(original + reward);
+					botFile.edit(name, result + "-" + stat[1] + "-" + max + "-" + stat[3]);
+					repeat--;
+				}
+				reward *= multiplier;
+				response = name + ": " + original + " + " + reward + " = " + result;
 				break;
 				
-			case 5: // set
+			case 5: // add & remove
+				line = botFile.getLine(name).split(": ");
+				stat = line[1].split("-");
+				category = line[0].split("[|]")[0];
+				original = Integer.parseInt(stat[0]);
+				max = Integer.parseInt(stat[2]);
+				reward = Integer.parseInt(command[4]);
+
+				if (command[1].equals("remove")) reward -= reward * 2;
+				
+				result = String.valueOf(original + reward);
+				botFile.edit(name, result + "-" + stat[1] + "-" + max + "-" + stat[3]);
+				response = name + ": " + original + " + " + reward + " = " + result;
+				break;
+				
+			case 6: // set
+				line = botFile.getLine(name).split(": ");
+				stat = line[1].split("-");
+				category = line[0].split("[|]")[0];
+				original = Integer.parseInt(stat[0]);
+				max = Integer.parseInt(stat[2]);
+				reward = Integer.parseInt(command[4]);
+				botFile.edit(name, reward + "-" + stat[1] + "-" + max + "-" + stat[3]);
+				response = name + ": " + original + " = " + reward;
 				break;
 		
 		}
 		
 	}
 	
-	private void assignStat() {
+	private void tech(String name, int operation) {
 		
+		switch (operation) {
 		
+			case 0:
+				response = botFile.findAllKeys();
+				break;
+				
+			case 1:
+				response = botFile.findLines(name).replaceAll("%", ":");
+				break;
+		
+			case 3: // create
+				botFile.add(name + ": " + message.split("\'")[1].replaceAll(":", "%") + "\r\n\r\n");
+				break;
+				
+			case 4:
+				botFile.removeLines(name);
+				break;
+				
+			default:
+				
+		}
+		
+	}
+	
+	private void train(String name, int operation, int amount) {
+		
+		switch (operation) {
+		
+			case 0:
+				response = "";
+				int i = 0;
+				boolean newline = false;
+				for (String index : botFile.getList("base", "perception", "control", "quickness", "brawn", "durability", "primary", "secondary", "charges")) {
+					
+					if (i == 0) {
+
+						if (index.equalsIgnoreCase("durability")) newline = true;
+						if (index.equalsIgnoreCase("base") || index.equalsIgnoreCase("primary") || index.equalsIgnoreCase("secondary") || index.equalsIgnoreCase("charges")) response += index + ": **";
+						else response += "     ○ " + index + ": **";
+						i++;
+					
+					} else {
+
+						i = 0;
+						response += index + "**\r\n";
+						if (newline) {
+							
+							response += "\r\n";
+							newline = false;
+							
+						}
+						
+					}
+					
+				} break;
+				
+			case 1:
+				character = "profiles/character/";
+				for (String index : new BotFile(character).list().split("\r\n")) new BotFile(character + index + "/training.info").create(getTraining());
+				break;
+			
+			case 2:
+				botFile.create(getTraining());
+				break;
+				
+			case 3: // add/remove
+				String value = botFile.find(name);
+				String[] valueSplit = value.split("/");
+				int original = Integer.parseInt(valueSplit[0]);
+				if (command[1].equalsIgnoreCase("remove")) amount -= amount * 2;
+				int reward = original + amount;
+				botFile.edit(name, reward + "/" + valueSplit[1]);
+				response = name + ": " + original + " + " + amount + " = " + reward;
+				break;
+				
+			case 4: // set
+				botFile.edit(name, amount + "/" + botFile.find(name).split("/")[1]);
+				response = name + " = " + amount;
+				break;
+		
+		}
+		
+	}
+	
+	private void rank(int operation) {
+		
+		switch (operation) {
+		
+			case 0:
+				response = botFile.find("rank");
+				break;
+				
+			case 1:
+				String newRank = tool.capitalize(command[3]);
+				botFile.edit("rank", newRank);
+				BotFile stats = new BotFile("profiles/character/" + character + "/stats.info");
+				String[] charges = stats.find("charges").split("-");
+				if (newRank.equalsIgnoreCase("Academy")) charges[2] = "16";
+				else if (newRank.equalsIgnoreCase("Initiate")) charges[2] = "30";
+				else if (newRank.equalsIgnoreCase("Captain")) charges[2] = "50";
+				else if (newRank.equalsIgnoreCase("General")) charges[2] = "70";
+				else if (newRank.equalsIgnoreCase("Leader")) charges[2] = "70";
+				stats.edit("charges", charges[0] + "-" + charges[1] + "-" + charges[2] + "-" + charges[3]);
+				break;
+		
+		}
+		
+	}
+	
+	private void prefs(int operation) {
+		
+		switch (operation) {
+		
+			case 0: // $prefs list
+				response = botFile.getLine("default character");
+				break;
+				
+			case 1: // $prefs default <char>
+				response = botFile.edit("default character", character);
+				break;
+		
+		}
 		
 	}
 	
@@ -874,9 +1271,15 @@ public class Command extends Response {
 		
 	}
 
-	public List<String> getResponse() {
+	public List<String> getLongResponse() {
 		
 		return tool.sect(response);
+		
+	}
+	
+	public String getResponse() {
+		
+		return response;
 		
 	}
 
