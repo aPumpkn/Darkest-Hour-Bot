@@ -47,7 +47,7 @@ public class Listener extends ListenerAdapter {
 	private JDA jda; // Core of all entities.
 	private Guild guild; // A Server hosted by Discord.
 	private Category category; // Organizes a Guild's channels in a folder-fashion.
-	private TextChannel channel; // Default channel the event was fired from.
+	public TextChannel channel; // Default channel the event was fired from.
 	private Message message; // Text Message sent to Discord.
 	private User user; // Discord account.
 	private Member member; // Guild-specific User.
@@ -56,6 +56,18 @@ public class Listener extends ListenerAdapter {
 	public TextChannel generalChannel; // #general
 	public TextChannel beginnersguideChannel; // #beginners-guide
 	public TextChannel modlogChannel; // #mod-log
+	public TextChannel welcomeChannel;
+	public TextChannel characterUnnacceptedChannel;
+	public TextChannel characterTemplateChannel;
+	public TextChannel characterGuideChannel;
+	public TextChannel characterAssistanceChannel;
+	public TextChannel questionsChannel;
+	public TextChannel serverLoreChannel;
+	public TextChannel chatRulesChannel;
+	public TextChannel rpRulesChannel;
+	public TextChannel characterApprovedChannel;
+	public TextChannel lookingForRpChannel;
+	
 	
 	/* JDA Roles */
 	public Role unverifiedRole; // @Unverified
@@ -94,26 +106,46 @@ public class Listener extends ListenerAdapter {
 		tool = new Tool();
 		verify = new Verify();
 		timer = new Timer("Listener");
-		guild = event.getJDA().getGuildById(555972965955665929L);
-		unverifiedRole = guild.getRoleById(613983789093355520L);
-		characterlessRole = guild.getRoleById(555977370629177384L); 
-		playerRole = guild.getRoleById(679567617610088488L);
-		generalChannel = guild.getTextChannelById(614011250694815753L);
-		beginnersguideChannel = guild.getTextChannelById(555977448639037441L);
-		modlogChannel = guild.getTextChannelById(614750983498760193L);
+		guild = event.getJDA().getGuildById(663038481769037845L); // 469188403557171200L
+		unverifiedRole = guild.getRoleById(663039672091410432L); // 725613690673430551L
+		characterlessRole = guild.getRoleById(663039691364368425L); //517875418754449414L
+		playerRole = guild.getRoleById(663039672741789696L); // 725614033318707240L
+		generalChannel = guild.getTextChannelById(663039950513766443L); // 517875713194590218L
+		modlogChannel = guild.getTextChannelById(663040133284757545L); // 725614395174158427L
+		welcomeChannel = guild.getTextChannelById(663039946806001677L);
+		characterTemplateChannel = guild.getTextChannelById(663040026828996620L);
+		characterGuideChannel = guild.getTextChannelById(663039898067927044L);
+		characterAssistanceChannel = guild.getTextChannelById(663040044533153802L);
+		questionsChannel = guild.getTextChannelById(663040160690339853L);
+		serverLoreChannel = guild.getTextChannelById(663039900614131783L);
+		chatRulesChannel = guild.getTextChannelById(663039904397131824L);
+		rpRulesChannel = guild.getTextChannelById(664180430135885834L);
+		characterUnnacceptedChannel = guild.getTextChannelById(663040030792482829L);
+		characterApprovedChannel = guild.getTextChannelById(663040034143731714L);
+		lookingForRpChannel = guild.getTextChannelById(663040007212367912L);
 		
 	}
 	
 	@Override
 	public void onReconnect(ReconnectedEvent event) {
 		
-		guild = event.getJDA().getGuildById(555972965955665929L);
-		unverifiedRole = guild.getRoleById(613983789093355520L);
-		characterlessRole = guild.getRoleById(555977370629177384L); 
-		playerRole = guild.getRoleById(679567617610088488L);
-		generalChannel = guild.getTextChannelById(614011250694815753L);
-		beginnersguideChannel = guild.getTextChannelById(555977448639037441L);
-		modlogChannel = guild.getTextChannelById(614750983498760193L);
+		guild = event.getJDA().getGuildById(663038481769037845L); // 469188403557171200L
+		unverifiedRole = guild.getRoleById(663039672091410432L); // 725613690673430551L
+		characterlessRole = guild.getRoleById(663039691364368425L); // 517875418754449414L
+		playerRole = guild.getRoleById(663039672741789696L); // 725614033318707240L
+		generalChannel = guild.getTextChannelById(663039950513766443L); // 517875713194590218L
+		modlogChannel = guild.getTextChannelById(663040133284757545L); // 725614395174158427L
+		welcomeChannel = guild.getTextChannelById(663039946806001677L);
+		characterTemplateChannel = guild.getTextChannelById(663040026828996620L);
+		characterGuideChannel = guild.getTextChannelById(663039898067927044L);
+		characterAssistanceChannel = guild.getTextChannelById(663040044533153802L);
+		questionsChannel = guild.getTextChannelById(663040160690339853L);
+		serverLoreChannel = guild.getTextChannelById(663039900614131783L);
+		chatRulesChannel = guild.getTextChannelById(663039904397131824L);
+		rpRulesChannel = guild.getTextChannelById(664180430135885834L);
+		characterUnnacceptedChannel = guild.getTextChannelById(663040030792482829L);
+		characterApprovedChannel = guild.getTextChannelById(663040034143731714L);
+		lookingForRpChannel = guild.getTextChannelById(663040007212367912L);
 		
 	}
 	
@@ -136,6 +168,7 @@ public class Listener extends ListenerAdapter {
 			userId = user.getId();
 			new BotFile("profiles/player/" + userId + ".verify").create("Question: " + verify.getQuestion() + "\r\nAnswer: " + verify.getAnswer());
 			guild.addRoleToMember(member, unverifiedRole).queue();
+			sendGuildMessage(welcomeChannel, member.getAsMention() + " has joined.");
 			sendPrivateMessage(user, response.getVerification() + verify.getQuestion());
 			
 		}
@@ -145,6 +178,7 @@ public class Listener extends ListenerAdapter {
 	@Override
 	public void onGuildMemberRoleRemove(GuildMemberRoleRemoveEvent event) {
 		
+		user = event.getUser();
 		botFile = new BotFile("profiles/player/" + user.getId() + ".verify");
 		
 		if (botFile.exists() && unverifiedRole.getId().equals(event.getRoles().get(0).getId())) {
@@ -156,8 +190,14 @@ public class Listener extends ListenerAdapter {
 			guild.removeRoleFromMember(member, unverifiedRole).queue();
 			guild.addRoleToMember(member, characterlessRole).queue();
 			guild.addRoleToMember(member, playerRole).queue();
-			sendPrivateMessage(user, response.getVerifySuccess());
-			sendGuildMessage(generalChannel, response.getNewMember(member.getAsMention()));
+			sendPrivateMessage(user, response.getVerifySuccess2());
+			sendGuildMessage(generalChannel, response.getNewMember(member.getAsMention()) + " Now before you can begin your story here, there's some things you need to do:\r\n\r\n" + 
+					"• " + chatRulesChannel.getAsMention() + " + " + rpRulesChannel.getAsMention() + ": Read these rules, as your presence here means you agree to these terms.\r\n" +
+					"• " + serverLoreChannel.getAsMention() + ": Catch up on where the state of this world is at.\r\n" +
+					"• " + characterUnnacceptedChannel.getAsMention() + " + " + characterTemplateChannel.getAsMention() + " + " + characterGuideChannel.getAsMention() + " + " + characterAssistanceChannel.getAsMention() + ": Using the template, and the guide as reference, fill in the required fields. Use the assistance channel if you need help during the process. After you've completed the application, submit it to the unnaccepted channel.\r\n" +
+					"• " + questionsChannel.getAsMention() + ": If you have any questions aside from character creation, ask them in the questions channel.\r\n" +
+					"• " + characterApprovedChannel.getAsMention() + ": Wait until a staff member approves your application and inserts the information into our custom bot.\r\n\r\n" +
+					"Then, you're free to introduce yourself into the world! Try asking by pinging a timezone role in " + lookingForRpChannel.getAsMention() + " for someone to join you.");
 			
 		}
 		
@@ -165,26 +205,37 @@ public class Listener extends ListenerAdapter {
 	
 	@Override
 	public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
-		
-		botFile = new BotFile("profiles/player/" + userId + ".verify");
-		
-		if (botFile.exists()) {
 
-			user = event.getAuthor();
-			userId = user.getId();
-			content = event.getMessage().getContentRaw();
+		user = event.getAuthor();
+		
+		if (!user.isBot()) {
+		
+			botFile = new BotFile("profiles/player/" + userId + ".verify");
 			
-			if (verify.check(content, botFile.find("answer"))) {
-
-				botFile.delete();
-				new BotFile("profiles/player/registered/" + userId + ".profile").create(response.getPrefs());
-				guild.removeRoleFromMember(member, unverifiedRole).queue();
-				guild.addRoleToMember(member, playerRole).queue();
-				guild.addRoleToMember(member, characterlessRole).queue();
-				sendPrivateMessage(user, response.getVerifySuccess());
-				sendGuildMessage(generalChannel, response.getNewMember(member.getAsMention()));
+			if (botFile.exists()) {
+	
+				userId = user.getId();
+				content = event.getMessage().getContentRaw();
 				
-			} else sendPrivateMessage(user, response.getVerifyFailure());
+				if (verify.check(content, botFile.find("answer"))) {
+	
+					botFile.delete();
+					new BotFile("profiles/player/registered/" + userId + ".profile").create(response.getPrefs());
+					guild.removeRoleFromMember(member, unverifiedRole).queue();
+					guild.addRoleToMember(member, playerRole).queue();
+					guild.addRoleToMember(member, characterlessRole).queue();
+					sendPrivateMessage(user, response.getVerifySuccess());
+					sendGuildMessage(generalChannel, response.getNewMember(member.getAsMention()) + " Now before you can begin your story here, there's some things you need to do:\r\n\r\n" + 
+							"• " + chatRulesChannel.getAsMention() + " + " + rpRulesChannel.getAsMention() + ": Read these rules, as your presence here means you agree to these terms.\r\n" +
+							"• " + serverLoreChannel.getAsMention() + ": Catch up on where the state of this world is at.\r\n" +
+							"• " + characterUnnacceptedChannel.getAsMention() + " + " + characterTemplateChannel.getAsMention() + " + " + characterGuideChannel.getAsMention() + " + " + characterAssistanceChannel.getAsMention() + ": Using the template, and the guide as reference, fill in the required fields. Use the assistance channel if you need help during the process. After you've completed the application, submit it to the unnaccepted channel.\r\n" +
+							"• " + questionsChannel.getAsMention() + ": If you have any questions aside from character creation, ask them in the questions channel.\r\n" +
+							"• " + characterApprovedChannel.getAsMention() + ": Wait until a staff member approves your application and inserts the information into our custom bot.\r\n\r\n" +
+							"Then, you're free to introduce yourself into the world! Try asking by pinging a timezone role in " + lookingForRpChannel.getAsMention() + " for someone to join you.");
+					
+				} else sendPrivateMessage(user, response.getVerifyFailure());
+				
+			}
 			
 		}
 		
@@ -204,9 +255,14 @@ public class Listener extends ListenerAdapter {
 
 			channel = event.getChannel();
 			message = event.getMessage();
+			member = event.getMember();
 			content = message.getContentRaw();
+			category = channel.getParent();
 			
-			if (new ChatFilter(content).check() && !channelName.startsWith("•")) { // If the message contained a blacklisted word/phrase wi.
+			if (category != null) categoryName = category.getName();
+			else categoryName = "";
+			
+			if (new ChatFilter(content).check() && !categoryName.startsWith("•")) { // If the message contained a blacklisted word/phrase wi.
 
 				message.delete().queue();
 				sendGuildMessage(modlogChannel, response.getBlockedMessage(channel.getAsMention(), member.getAsMention(), content));
