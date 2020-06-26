@@ -53,7 +53,7 @@ public class Tool {
 				
 			} else {
 				
-				part += scanner.nextLine();
+				part += scanner.nextLine() + "\r\n";
 				counter++;
 			
 			}
@@ -61,7 +61,7 @@ public class Tool {
 		}
 
 		scanner.close();
-		if (!part.isEmpty()) list.add(part);
+		if (!part.isEmpty()) list.add(part.substring(0, part.length() - 2));
 		return list;
 		
 	}
