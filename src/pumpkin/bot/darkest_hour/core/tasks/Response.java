@@ -189,7 +189,7 @@ public class Response {
 			+ "Kunai: 10\r\n"
 			+ "Shuriken: 10\r\n"
 			+ "Ninja Wire: 5";
-	private String general = "Name: Unknown\r\n" + 
+	private String general = "Name: Unknown\r\n" +
 			"Rank: Unknown\r\n" + 
 			"Age: Unknown\r\n" + 
 			"Gender: Unknown\r\n" + 
@@ -224,7 +224,8 @@ public class Response {
 	/* Misc */
 	private String verification = "**Verification Question:** ";
 	private String verifyFailure = "**Verification Failed...** The answer you gave was incorrect. Be sure to include correct spelling and exclude plural answers. Remember, the answer is only one word, and it doesn't have numbers nor punctuation.";
-	private String verifySuccess = "**Verification Success!** You're now registered into the server. The next step is to create a character, and then you can finally begin. Use the #character-template to get started. The process usually takes about ten to thirty minutes depending on the detail put into it. Should you have any further questions, or wish to be aided through the process, contact a staff member.";
+	private String verifySuccess = "**Verification Success!** You're now registered into the server. Check #general for your next steps.";
+	private String verifySuccess2 = "**Verification Success!** You've been manually verified by one of our staff members, and are now a registered member. Check #general for your next steps.";
 	private String newMember = " is now an official member of Breaking Dawn!";
 	private String[] blockedMessage = {"Message deleted from ", ": ||", "||\r\n**sent by** "};
 	
@@ -269,5 +270,9 @@ public class Response {
 	
 	/* Retrieves the internal error message.*/
 	public String getInternalErr() { return internalErr; }
+
+	public String getVerifySuccess2() {
+		return verifySuccess2;
+	}
 
 }
