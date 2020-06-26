@@ -432,7 +432,7 @@ public class BotFile extends Listener {
 					
 					String key = line.split(": ")[0];
 					
-					if (key.startsWith("[")) value += key.split("]")[1] + "\r\n";
+					if (key.contains("[|]")) value += key.split("[|]")[1] + "\r\n";
 					else value += key + "\r\n";
 					
 				}
@@ -441,7 +441,7 @@ public class BotFile extends Listener {
 			
 		} catch (FileNotFoundException e) { e.printStackTrace(); }
 		
-		return value;
+		return value.trim();
 		
 	}
 	
