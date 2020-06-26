@@ -23,7 +23,7 @@ public class Main {
 		try {
 			
 			System.out.println("\r\n____________________________________________________\r\n\r\n[Darkest Dawn] API Initializing...\r\n");
-			api = new JDABuilder(AccountType.BOT).setToken("NTM0ODgzNjAzNTA3NzA3OTA0.Xo0MZw.gtC3Y42vItA5DfnqPeUn-iR879g").build();
+			api = new JDABuilder(AccountType.BOT).setToken("lol no").build();
 			api.addEventListener(listener);
 			api.awaitReady();
 			
